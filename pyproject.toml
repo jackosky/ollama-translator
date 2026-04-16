@@ -1,0 +1,30 @@
+[project]
+name = "ollama-translator"
+version = "0.1.0"
+description = "SRT subtitle translator using Ollama"
+authors = [
+    {name = "Jacek Poreda",email = "jckporeda@gmail.com"}
+]
+readme = "README.md"
+requires-python = "^3.11"
+dependencies = [
+    "ollama (>=0.6.1,<0.7.0)",
+    "srt (>=3.5.3,<4.0.0)",
+    "tqdm (>=4.67.3,<5.0.0)",
+    "python-dotenv (>=1.2.2,<2.0.0)"
+]
+
+
+[tool.poetry]
+packages = [{include = "translator.py"}]
+
+[tool.poetry.scripts]
+translate = "translator:main"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^9.0.3"
+pytest-mock = "^3.15.1"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

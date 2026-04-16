@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+
+# Poetry
+dist/
+
+# Environment variables
+.env
+.env.local
+
+# Claude Code
+.claude/
+
+# Subtitle files (avoid committing copyrighted content)
+*.srt
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
