@@ -1,37 +1,16 @@
 import argparse
-import os
 import sys
 from pathlib import Path
 
 import ollama
 import srt
-from dotenv import load_dotenv
-from langcodes import Language, LanguageTagError
 from tqdm import tqdm
 
-load_dotenv()
+from ollama_translator.core.languages import resolve_lang
+from ollama_translator.core.translation import BATCH_SIZE, MODEL, OLLAMA_HOST, build_prompts
 
-OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
-MODEL = "gemma4:31b"
-BATCH_SIZE = 10
 DEFAULT_SOURCE_LANG = "en"
 DEFAULT_TARGET_LANG = "pl"
-
-
-def resolve_lang(code: str) -> str:
-    try:
-        return Language.get(code).display_name()
-    except (LanguageTagError, ValueError):
-        print(f"Error: unknown language code '{code}'.", file=sys.stderr)
-        sys.exit(1)
-
-
-def build_prompts(source_lang: str, target_lang: str) -> str:
-    return (
-        "You are an expert in audiovisual translation. "
-        f"You translate movie subtitles from {source_lang} into {target_lang}, "
-        "ensuring natural-sounding dialogue while preserving the SRT format."
-    )
 
 
 def translate_batch(subtitles: list[srt.Subtitle], model: str, source_lang: str, target_lang: str) -> list[str]:
@@ -130,7 +109,3 @@ def main() -> None:
     target_lang = resolve_lang(args.target_lang)
 
     translate_file(args.input, args.output, args.model, source_lang, target_lang)
-
-
-if __name__ == "__main__":
-    main()

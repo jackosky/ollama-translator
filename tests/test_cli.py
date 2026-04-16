@@ -5,8 +5,9 @@ from types import SimpleNamespace
 import pytest
 import srt
 
-import translator
-from translator import resolve_lang, translate_batch, translate_file
+from ollama_translator.cli import main as cli_module
+from ollama_translator.cli.main import translate_batch, translate_file
+from ollama_translator.core.translation import OLLAMA_HOST
 
 
 def make_subtitle(index: int, content: str) -> srt.Subtitle:
@@ -21,28 +22,13 @@ def fake_response(text: str):
 
 
 # ---------------------------------------------------------------------------
-# resolve_lang
-# ---------------------------------------------------------------------------
-
-class TestResolveLang:
-    def test_valid_code_returns_name(self):
-        assert resolve_lang("en") == "English"
-        assert resolve_lang("pl") == "Polish"
-        assert resolve_lang("de") == "German"
-
-    def test_invalid_code_exits(self):
-        with pytest.raises(SystemExit):
-            resolve_lang("xx_INVALID_CODE_zz")
-
-
-# ---------------------------------------------------------------------------
 # translate_batch
 # ---------------------------------------------------------------------------
 
 class TestTranslateBatch:
     def test_returns_translated_text(self, mocker):
         subs = [make_subtitle(1, "Hello world")]
-        mocker.patch("translator.ollama.Client").return_value.chat.return_value = (
+        mocker.patch("ollama_translator.cli.main.ollama.Client").return_value.chat.return_value = (
             fake_response("1. Witaj świecie")
         )
         result = translate_batch(subs, "test-model", "English", "Polish")
@@ -50,7 +36,7 @@ class TestTranslateBatch:
 
     def test_multiline_subtitle_separator_preserved(self, mocker):
         subs = [make_subtitle(1, "That was crazy, huh?\n- Tell me about it.")]
-        mocker.patch("translator.ollama.Client").return_value.chat.return_value = (
+        mocker.patch("ollama_translator.cli.main.ollama.Client").return_value.chat.return_value = (
             fake_response("1. To było szalone, prawda? | - No właśnie.")
         )
         result = translate_batch(subs, "test-model", "English", "Polish")
@@ -58,7 +44,7 @@ class TestTranslateBatch:
 
     def test_missing_translation_falls_back_to_original(self, mocker):
         subs = [make_subtitle(1, "Hello"), make_subtitle(2, "World")]
-        mocker.patch("translator.ollama.Client").return_value.chat.return_value = (
+        mocker.patch("ollama_translator.cli.main.ollama.Client").return_value.chat.return_value = (
             fake_response("1. Cześć")
         )
         result = translate_batch(subs, "test-model", "English", "Polish")
@@ -67,7 +53,7 @@ class TestTranslateBatch:
 
     def test_batch_of_multiple_subtitles(self, mocker):
         subs = [make_subtitle(i, f"Line {i}") for i in range(1, 4)]
-        mocker.patch("translator.ollama.Client").return_value.chat.return_value = (
+        mocker.patch("ollama_translator.cli.main.ollama.Client").return_value.chat.return_value = (
             fake_response("1. Linia 1\n2. Linia 2\n3. Linia 3")
         )
         result = translate_batch(subs, "test-model", "English", "Polish")
@@ -75,18 +61,18 @@ class TestTranslateBatch:
 
     def test_uses_correct_model_and_host(self, mocker):
         subs = [make_subtitle(1, "Hi")]
-        mock_client_cls = mocker.patch("translator.ollama.Client")
+        mock_client_cls = mocker.patch("ollama_translator.cli.main.ollama.Client")
         mock_client_cls.return_value.chat.return_value = fake_response("1. Cześć")
 
         translate_batch(subs, "llama3:8b", "English", "Polish")
 
-        mock_client_cls.assert_called_once_with(host=translator.OLLAMA_HOST)
+        mock_client_cls.assert_called_once_with(host=OLLAMA_HOST)
         call_kwargs = mock_client_cls.return_value.chat.call_args
         assert call_kwargs.kwargs["model"] == "llama3:8b"
 
     def test_source_and_target_language_in_prompt(self, mocker):
         subs = [make_subtitle(1, "Hello")]
-        mock_client_cls = mocker.patch("translator.ollama.Client")
+        mock_client_cls = mocker.patch("ollama_translator.cli.main.ollama.Client")
         mock_client_cls.return_value.chat.return_value = fake_response("1. Hola")
 
         translate_batch(subs, "test-model", "English", "Spanish")
@@ -119,7 +105,7 @@ class TestTranslateFile:
         output_file = tmp_path / "output.srt"
         input_file.write_text(SRT_CONTENT, encoding="utf-8")
 
-        mocker.patch("translator.ollama.Client").return_value.chat.side_effect = [
+        mocker.patch("ollama_translator.cli.main.ollama.Client").return_value.chat.side_effect = [
             fake_response("1. Cześć\n2. Świecie"),
         ]
 
@@ -129,7 +115,7 @@ class TestTranslateFile:
         assert result[0].content == "Cześć"
         assert result[1].content == "Świecie"
 
-    def test_exits_on_empty_srt(self, tmp_path, mocker):
+    def test_exits_on_empty_srt(self, tmp_path):
         input_file = tmp_path / "empty.srt"
         input_file.write_text("", encoding="utf-8")
 
@@ -142,4 +128,4 @@ class TestTranslateFile:
             ["translate", str(tmp_path / "nonexistent.srt"), str(tmp_path / "out.srt")],
         )
         with pytest.raises(SystemExit):
-            translator.main()
+            cli_module.main()
