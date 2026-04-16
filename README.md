@@ -29,21 +29,21 @@ OLLAMA_HOST=http://192.168.1.100:11434
 
 If `OLLAMA_HOST` is not set, it defaults to `http://localhost:11434`.
 
-## Usage
+## Modes
+
+### CLI mode
+
+Translates a single SRT file on the command line and exits.
 
 ```bash
 poetry run translate <input.srt> <output.srt> [options]
 ```
-
-### Options
 
 | Flag | Short | Default | Description |
 |------|-------|---------|-------------|
 | `--source-lang` | `-s` | `en` | Source language (ISO 639-1 code) |
 | `--target-lang` | `-t` | `pl` | Target language (ISO 639-1 code) |
 | `--model` | `-m` | `gemma4:31b` | Ollama model to use |
-
-### Examples
 
 ```bash
 # English → Polish (defaults)
@@ -58,6 +58,34 @@ poetry run translate film.srt film.en.srt -s fr -t en
 # Use a different model
 poetry run translate film.srt film.pl.srt -m llama3.3:70b
 ```
+
+### Server mode
+
+Runs a persistent HTTP server that exposes a LibreTranslate-compatible `POST /translate` endpoint. This is useful for integrating with tools that speak the LibreTranslate API (e.g. media players, browser extensions).
+
+```bash
+poetry run serve
+```
+
+The server defaults to `0.0.0.0:5000`. Override with environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SERVER_HOST` | `0.0.0.0` | Bind address |
+| `SERVER_PORT` | `5000` | Bind port |
+| `TRANSLATE_MODEL` | `llama3.2:1b` | Ollama model to use |
+| `CHUNK_SIZE` | `30` | Subtitle blocks per translation request |
+| `CACHE_DIR` | `.cache` | Directory for cached results |
+
+**Endpoint:** `POST /translate`
+
+| Form field | Default | Description |
+|------------|---------|-------------|
+| `q` | — | Text or SRT content to translate |
+| `source` | `en` | Source language (ISO 639-1 code) |
+| `target` | `pl` | Target language (ISO 639-1 code) |
+
+Translations run in the background. The first request for a given input returns HTTP 503 and starts the job; subsequent requests for the same input return 503 until the job finishes, then return 200 with `{"translatedText": "..."}`. Results are cached on disk so repeated requests are instant.
 
 ## Language codes
 
