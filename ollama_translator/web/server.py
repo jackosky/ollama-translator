@@ -3,6 +3,7 @@ import logging
 import os
 import re
 from pathlib import Path
+from typing import Annotated
 
 import aiofiles
 import uvicorn
@@ -145,9 +146,9 @@ async def _translate_and_cache(q: str, source_name: str, target_name: str, key: 
 @app.post("/translate")
 async def translate(
     background_tasks: BackgroundTasks,
-    q: str = Form(...),
-    source: str = Form(default="en"),
-    target: str = Form(default="pl"),
+    q: Annotated[str, Form()],
+    source: Annotated[str, Form()] = "en",
+    target: Annotated[str, Form()] = "pl",
 ) -> JSONResponse:
     source_name = resolve_lang(source)
     target_name = resolve_lang(target)
