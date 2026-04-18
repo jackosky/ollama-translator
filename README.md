@@ -1,5 +1,7 @@
 # ollama-translator
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=jackosky_ollama-translator&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jackosky_ollama-translator) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=jackosky_ollama-translator&metric=coverage)](https://sonarcloud.io/summary/new_code?id=jackosky_ollama-translator)
+
 Translate SRT subtitle files between any languages using a locally running [Ollama](https://ollama.com) model.
 
 ## Requirements
