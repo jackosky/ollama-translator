@@ -110,6 +110,32 @@ Any [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) two-lette
 
 The script parses the input `.srt` file and sends subtitles to Ollama in batches of 10. Each batch is translated in a single request, which preserves conversational context across neighbouring lines. Multi-line subtitle entries are flattened with a ` | ` separator before translation and restored afterward, so the SRT structure is never broken.
 
+## Docker
+
+Build the image:
+
+```bash
+docker build -t ollama-translator .
+```
+
+Run the server:
+
+```bash
+docker run -p 5000:5000 -e OLLAMA_HOST=http://192.168.1.100:11434 ollama-translator
+```
+
+Override any server setting with `-e`:
+
+```bash
+docker run -p 8080:8080 \
+  -e OLLAMA_HOST=http://192.168.1.100:11434 \
+  -e SERVER_PORT=8080 \
+  -e TRANSLATE_MODEL=llama3.3:70b \
+  ollama-translator
+```
+
+> Never bind-mount a `.env` file into the container — pass secrets as `-e` flags or via Docker secrets.
+
 ## Running tests
 
 ```bash
