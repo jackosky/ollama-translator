@@ -1,0 +1,9 @@
+.git
+.env
+.cache
+__pycache__
+*.pyc
+*.pyo
+tests/
+.pytest_cache
+*.srt
